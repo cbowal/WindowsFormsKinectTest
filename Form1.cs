@@ -83,81 +83,59 @@ namespace WindowsFormsKinectTest
         {
 
             // if the window is displayed, show the depth buffer image
-            if (WindowState != FormWindowState.Minimized)
+            Bitmap mask = null;
+            using (DepthImageFrame frame = e.OpenDepthImageFrame())
             {
-                Bitmap mask = null;
-                using (var frame = e.OpenDepthImageFrame())
+                if (frame != null)
                 {
                     _depthBitmap = CreateBitMapFromDepthFrame(frame);
-                    if (_depthBitmap != null)
-                    {
-                        ColorFiltering filter = new ColorFiltering();
-                        filter.Red = new IntRange(50, 150);
-                        filter.Green = new IntRange(200, 255);
-                        filter.Blue = new IntRange(150, 255);
-                        // apply the filter
-                        _depthBitmap = AForge.Imaging.Image.Clone(_depthBitmap, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                        mask = filter.Apply(_depthBitmap);
+                    ColorFiltering filter = new ColorFiltering();
+                    filter.Red = new IntRange(50, 150);
+                    filter.Green = new IntRange(200, 255);
+                    filter.Blue = new IntRange(150, 255);
+                    // apply the filter
+                    _depthBitmap = AForge.Imaging.Image.Clone(_depthBitmap, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    mask = filter.Apply(_depthBitmap);
 
                        
-                        Grayscale gray = new Grayscale(0.7, 0.3, 0.1);
-                        mask = gray.Apply(mask);
+                    Grayscale gray = new Grayscale(0.7, 0.3, 0.1);
+                    mask = gray.Apply(mask);
 
-                        Threshold threshold = new Threshold(100);
-                        threshold.ApplyInPlace(mask);
+                    Threshold threshold = new Threshold(100);
+                    threshold.ApplyInPlace(mask);
 
-                        Invert invert = new Invert();
-                        invert.ApplyInPlace(mask);
+                    Invert invert = new Invert();
+                    invert.ApplyInPlace(mask);
 
                  
-                    }
-
                 }
 
-                using (var frame = e.OpenColorImageFrame())
+            }
+
+            using (ColorImageFrame frame = e.OpenColorImageFrame())
+            {
+                if (frame != null)
                 {
                     _bitmap = ImageToBitmap(frame);
-                    if (_bitmap == null)
-                    {
-                        return;
-                    }
                     if (mask != null)
                     {
                         ApplyMask subtract = new ApplyMask(mask);
                         _bitmap = subtract.Apply(_bitmap);
                     }
 
+                    HSLFiltering hsl = new HSLFiltering(new IntRange(330, 30), new Range(0.3f, 1), new Range(0.15f, 1));
+                    hsl.ApplyInPlace(_bitmap);
 
-                    // create filter
-                    ColorFiltering filter = new ColorFiltering();
-                    // set color ranges to keep
-                    filter.Red = new IntRange(140, 220);
-                    filter.Green = new IntRange(50, 130);
-                    filter.Blue = new IntRange(50, 130);
-                    // apply the filter
-                    filter.ApplyInPlace(_bitmap);
 
-                    // create and configure the filter
-                    FillHoles holes = new FillHoles();
-                    holes.MaxHoleHeight = 20;
-                    holes.MaxHoleWidth = 20;
-                    holes.CoupledSizeFiltering = false;
-                    // apply the filter
-                    Bitmap result = filter.Apply(_bitmap);
-
-                    
-                    Grayscale gray = new Grayscale(0.4,0.7,0.1);
+                    Grayscale gray = new Grayscale(1, 0.8, 0.8);
                     _bitmap = gray.Apply(_bitmap);
-
-                    return;
-                    
 
 
                     BlobsFiltering blob = new BlobsFiltering();
                     blob.CoupledSizeFiltering = false;
-                    blob.MinHeight = 20;
+                    blob.MinHeight = 10;
                     blob.MinWidth = blob.MinHeight;
-                    blob.MaxHeight = blob.MaxWidth = 100;
+                    blob.MaxHeight = blob.MaxWidth = 300;
                     blob.ApplyInPlace(_bitmap);
 
                     // locate objects using blob counter
@@ -175,27 +153,30 @@ namespace WindowsFormsKinectTest
                     // are recognized as circles
                     int maxBlob = -1;
                     double maxFullness = -1;
-                    for (int i = 0, n = blobs.Length; i < n; i++)
+                    for (int i = 0, n = blobs.Length; i < n; i++) 
                     {
                         float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width;
 
-                        if (hw_ratio > 0.5 && hw_ratio < 2 && blobs[i].Fullness >= 0.25)
+                        if (hw_ratio > 0.75 && hw_ratio < 1.5 && blobs[i].Fullness > 0.35)
                         {
-                            if (blobs[i].Fullness > maxFullness)
+                            if (blobs[i].Area > maxFullness)
+                            {
                                 maxBlob = i;
+                                maxFullness = blobs[i].Area;
+                            }
                         }
                     }
 
                     for (int i = 0, n = blobs.Length; i < n; i++)
                     {
-                        float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width; 
+                        float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width;
 
-                        if (hw_ratio > 0.5 && hw_ratio < 2)
+                        if (hw_ratio > 0.75 && hw_ratio < 1.5 && blobs[i].Area > 300 && blobs[i].Fullness > 0.35)
                         {
                             AForge.Point center = blobs[i].CenterOfGravity;
                             if (maxBlob == i)
                                 pen = purplePen;
-                            else if (blobs[i].Fullness > 0.25)
+                            else if (blobs[i].Fullness > 0.35)
                                 pen = greenPen;
                             else
                                 pen = redPen;
@@ -206,17 +187,21 @@ namespace WindowsFormsKinectTest
                                 (int)(center.Y - radius),
                                 (int)(radius * 2),
                                 (int)(radius * 2));
+                            g.DrawString(hw_ratio.ToString(), new Font("Arial", 16), new SolidBrush(Color.Yellow), 
+                                new System.Drawing.Point((int)center.X, (int)center.Y));
                         }
                     }
 
                     redPen.Dispose();
+                    greenPen.Dispose();
+                    purplePen.Dispose();
                     g.Dispose();
 
+                    this.Refresh();
                 }
 
             }
         }
-
 
         private Bitmap CreateBitMapFromDepthFrame(DepthImageFrame frame)
         {
@@ -242,6 +227,7 @@ namespace WindowsFormsKinectTest
         {
             if (Image == null)
             {
+                System.Console.WriteLine("RETURNING NULL");
                 return _bitmap;
             }
             byte[] pixeldata = new byte[Image.PixelDataLength];
