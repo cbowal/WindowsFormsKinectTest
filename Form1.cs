@@ -21,7 +21,7 @@ namespace WindowsFormsKinectTest
         private Bitmap _drawBitmap;
         private Bitmap _depthBitmap;
 
-        private Game game = new Game();
+        private Game game;
         
         public Form1()
         {
@@ -30,6 +30,7 @@ namespace WindowsFormsKinectTest
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            game = new Game();
         }
 
         void ChooserSensorChanged(object sender, KinectChangedEventArgs e)
@@ -267,7 +268,8 @@ namespace WindowsFormsKinectTest
                 _chooser.KinectChanged += ChooserSensorChanged;
                 _chooser.Start();
             }
-            game = new Game();
+            game.reset();
+            //todo: reset everything!
         }
     }
 }

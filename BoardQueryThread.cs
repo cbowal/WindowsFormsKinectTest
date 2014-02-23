@@ -4,14 +4,14 @@ using System.Threading;
 public class BoardQueryThread
 {
     int[,] _board;
-    public BoardQueryThread(int[,] board)
+    public BoardQueryThread(ref int[,] board)
     {
         _board = board;
     }
 
     public void QueryBoardRun()
     {
-        //while (true)
+        while (true)
         {
             Thread.Sleep(100);
             MyWebRequest request = new MyWebRequest("http://107.170.71.135:8000/board/");

@@ -14,8 +14,15 @@ public class Game
 
     public bool hasWon = false;
 
-	public Game()
-	{
+    BoardQueryThread qb;
+    Thread oThread;
+
+    public void reset()
+    {
+        previousDropRow = -1;
+        activatedColumn = -1;
+        hasWon = false;
+
         _board = new int[6, 7] {
                                 {0,0,0,0,0,0,0},
                                 {0,0,0,0,0,0,0},
@@ -52,9 +59,14 @@ public class Game
             new Rectangle(20, 130, 600, 160),  //first drop row
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
+    }
 
-        BoardQueryThread qb = new BoardQueryThread(_board);
-        Thread oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
+	public Game()
+	{
+        reset();
+
+        qb = new BoardQueryThread(ref _board);
+        oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
         oThread.Start();
 	}
 
