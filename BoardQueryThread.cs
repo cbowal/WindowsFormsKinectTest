@@ -5,7 +5,7 @@ public class BoardQueryThread
 {
     int[,] _board;
     Object _lock;
-    public BoardQueryThread(int[,] board, Object lock_obj)
+    public BoardQueryThread(ref int[,] board, ref Object lock_obj)
     {
         _board = board;
         _lock = lock_obj;
@@ -13,7 +13,7 @@ public class BoardQueryThread
 
     public void QueryBoardRun()
     {
-        //while (true)
+        while (true)
         {
             Thread.Sleep(100);
             MyWebRequest request = new MyWebRequest("http://107.170.71.135:8000/board/");

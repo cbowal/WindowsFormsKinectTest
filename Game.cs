@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Threading;
 
-public class Game
+public class Game 
 {
     private int[,] _board;
     private Object _lock = new Object();
@@ -16,8 +16,8 @@ public class Game
     private Thread oThread;
     public bool hasWon = false;
 
-	public void reset()
-	{
+    public void reset()
+    {
 
         lock (_lock)
         {
@@ -30,7 +30,10 @@ public class Game
                                 {0,0,0,0,0,0,0},
                                             };
         }
-       
+        previousDropRow = -1;
+        activatedColumn = -1;
+        hasWon = false;
+
 
         _dims = new Rectangle[6, 7] {
                                 {new Rectangle(40, 50, 80, 61), new Rectangle(120, 50, 80, 61), new Rectangle(200, 50, 80, 61),
@@ -59,13 +62,13 @@ public class Game
             new Rectangle(20, 130, 600, 160),  //first drop row
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
-
     }
 
-    public Game() {
+	public Game()
+	{
         reset();
 
-        qb = new BoardQueryThread(_board, _lock);
+        qb = new BoardQueryThread(ref _board, ref _lock);
         oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
         oThread.Start();
 	}
