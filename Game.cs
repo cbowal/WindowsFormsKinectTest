@@ -12,10 +12,11 @@ public class Game
     private Rectangle[] _rows;
     private int previousDropRow = -1;
     private int activatedColumn = -1;
-
+    private BoardQueryThread qb;
+    private Thread oThread;
     public bool hasWon = false;
 
-	public Game()
+	public void reset()
 	{
 
         lock (_lock)
@@ -59,8 +60,13 @@ public class Game
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
 
-        BoardQueryThread qb = new BoardQueryThread(_board, _lock);
-        Thread oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
+    }
+
+    public Game() {
+        reset();
+
+        qb = new BoardQueryThread(_board, _lock);
+        oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
         oThread.Start();
 	}
 
