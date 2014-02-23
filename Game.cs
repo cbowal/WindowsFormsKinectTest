@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Drawing;
-<<<<<<< HEAD
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-=======
->>>>>>> 95303ad58d274e9c2263a69540ac00a5dde28943
 using System.Threading;
 
 public class Game
