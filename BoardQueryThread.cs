@@ -11,11 +11,18 @@ public class BoardQueryThread
 
     public void QueryBoardRun()
     {
+<<<<<<< HEAD
         MyWebRequest request = new MyWebRequest("http://107.170.71.135:8000/board/");
             
         while (true)
         {
             Thread.Sleep(100);
+=======
+        while (true)
+        {
+            Thread.Sleep(100);
+            MyWebRequest request = new MyWebRequest("http://107.170.71.135:8000/board/");
+>>>>>>> 95303ad58d274e9c2263a69540ac00a5dde28943
             string json_response = request.GetResponse();
             JObject json = JObject.Parse(json_response);
             for (int i = 0; i < 6; i++) {
