@@ -22,7 +22,6 @@ public class BoardQueryThread
                     _board[i,j] = (int)json["board"][i][j];
                 }
             }
-            System.Console.WriteLine(_board);
         }
     }
 }
