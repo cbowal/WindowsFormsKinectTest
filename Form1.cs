@@ -46,7 +46,7 @@ namespace WindowsFormsKinectTest
                 return;
             }
 
-            newsensor.SkeletonStream.Enable();
+            newsensor.SkeletonStream.Disable();
             newsensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
             newsensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
             newsensor.AllFramesReady += SensorAllFramesReady;
@@ -81,10 +81,8 @@ namespace WindowsFormsKinectTest
             {
                 SensorFrameReady(e);
                 video.Image = _drawBitmap;
-                //Application.DoEvents();
             }
         }
-
 
         void SensorFrameReady(AllFramesReadyEventArgs e)
         {
@@ -126,12 +124,16 @@ namespace WindowsFormsKinectTest
                         _bitmap = subtract.Apply(_bitmap);
                     }
 
-                    HSLFiltering hsl = new HSLFiltering(new IntRange(330, 30), new Range(0.3f, 1), new Range(0.15f, 1));
+                    HSLFiltering hsl = new HSLFiltering(new IntRange(330, 30), new Range(0.5f, 1), new Range(0.1f, 1));
                     hsl.ApplyInPlace(_bitmap);
-
 
                     Grayscale gray = new Grayscale(1, 0.8, 0.8);
                     _bitmap = gray.Apply(_bitmap);
+
+
+                    Mean meanFilter = new Mean();
+                    meanFilter.ApplyInPlace(_bitmap);
+
 
                     BlobsFiltering blob = new BlobsFiltering();
                     blob.CoupledSizeFiltering = false;
@@ -144,7 +146,6 @@ namespace WindowsFormsKinectTest
                     BlobCounter blobCounter = new BlobCounter();
                     blobCounter.ProcessImage(_bitmap);
                     Blob[] blobs = blobCounter.GetObjectsInformation();
-                    // create Graphics object to draw on the image and a pen
                     
                     Pen redPen = new Pen(Color.Red, 2);
                     Pen greenPen = new Pen(Color.Green, 2);
@@ -158,7 +159,7 @@ namespace WindowsFormsKinectTest
                     {
                         float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width;
 
-                        if (hw_ratio > 0.65 && hw_ratio < 1.5 && blobs[i].Fullness > 0.35)
+                        if (hw_ratio > 0.65 && hw_ratio < 1.5 && blobs[i].Area > 200 && blobs[i].Fullness > 0.35)
                         {
                             if (blobs[i].Area > maxFullness)
                             {
@@ -167,6 +168,8 @@ namespace WindowsFormsKinectTest
                             }
                         }
                     }
+
+                    System.Console.WriteLine("MAX BLOB: " + maxBlob.ToString());
 
 
                     //draw to screen!

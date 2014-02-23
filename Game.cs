@@ -79,6 +79,7 @@ public class Game
 
     Pen arrowPen = new Pen(Color.Purple, 10);
     Pen borderPen = new Pen(Color.White, 2);
+    Pen redPen = new Pen(Color.Red, 2);
     Brush grayBrush = new SolidBrush(Color.Orange);
     Brush brush = new SolidBrush(Color.LightGreen);
     Brush p1Brush = new SolidBrush(Color.Green);
@@ -92,7 +93,7 @@ public class Game
         }
     }
 
-    private void someoneWon(int playerNum)
+    private void someoneWon(int playerNum, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4)
     {
         hasWon = true;
         winningPlayer = playerNum;
@@ -111,7 +112,7 @@ public class Game
             {
                 int sum = sum4(x, y, x + 1, y, x + 2, y, x + 3, y) / 4;
                 if (sum != 0)
-                    someoneWon(sum);
+                    someoneWon(sum, x, y, x + 1, y, x + 2, y, x + 3, y);
             }
 
         //check horizontal lines
@@ -120,7 +121,7 @@ public class Game
             {
                 int sum = sum4(x, y, x, y + 1, x, y + 2, x, y + 3) / 4;
                 if (sum != 0)
-                    someoneWon(sum);
+                    someoneWon(sum, x, y, x, y + 1, x, y + 2, x, y + 3);
             }
 
         //check down-right diagonal lines
@@ -129,7 +130,7 @@ public class Game
             {
                 int sum = sum4(x, y, x + 1, y + 1, x + 2, y + 2, x + 3, y + 3) / 4;
                 if (sum != 0)
-                    someoneWon(sum);
+                    someoneWon(sum, x, y, x + 1, y + 1, x + 2, y + 2, x + 3, y + 3);
             }
 
         //check down-left diagonal lines
@@ -138,7 +139,7 @@ public class Game
             {
                 int sum = sum4(x + 3, y + 3, x + 2, y + 2, x + 1, y + 1, x, y) / 4;
                 if (sum != 0)
-                    someoneWon(sum);
+                    someoneWon(sum, x + 3, y + 3, x + 2, y + 2, x + 1, y + 1, x, y);
             }
     }
 
@@ -151,13 +152,15 @@ public class Game
             for (int x = 0; x < 6; x++)
                 for (int y = 0; y < 7; y++)
                 {
-                    if (_board[x, y] == 1)
+                    if (_board[x, y] > 0)
                     {
                         g.FillRectangle(p1Brush, _dims[x, y]);
+                        g.DrawRectangle(borderPen, _dims[x, y]);
                     }
-                    else if (_board[x, y] == -1)
+                    else if (_board[x, y] < 0)
                     {
                         g.FillRectangle(p2Brush, _dims[x, y]);
+                        g.DrawRectangle(borderPen, _dims[x, y]);
                     }
                     else if (x == 0 && _dims[x, y].Contains((int)p.X, (int)p.Y))
                     {
