@@ -17,7 +17,10 @@ namespace WindowsFormsKinectTest
     {
         private KinectSensorChooser _chooser;
         private Bitmap _bitmap;
+        private Bitmap _drawBitmap;
         private Bitmap _depthBitmap;
+
+        private Game game = new Game();
         
         public Form1()
         {
@@ -75,7 +78,7 @@ namespace WindowsFormsKinectTest
         void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e)
         {
             SensorFrameReady(e);
-            video.Image = _bitmap;
+            video.Image = _drawBitmap;
         }
 
 
@@ -106,8 +109,6 @@ namespace WindowsFormsKinectTest
 
                     Invert invert = new Invert();
                     invert.ApplyInPlace(mask);
-
-                 
                 }
 
             }
@@ -116,7 +117,7 @@ namespace WindowsFormsKinectTest
             {
                 if (frame != null)
                 {
-                    _bitmap = ImageToBitmap(frame);
+                    _bitmap = _drawBitmap = ImageToBitmap(frame);
                     if (mask != null)
                     {
                         ApplyMask subtract = new ApplyMask(mask);
@@ -130,10 +131,9 @@ namespace WindowsFormsKinectTest
                     Grayscale gray = new Grayscale(1, 0.8, 0.8);
                     _bitmap = gray.Apply(_bitmap);
 
-
                     BlobsFiltering blob = new BlobsFiltering();
                     blob.CoupledSizeFiltering = false;
-                    blob.MinHeight = 10;
+                    blob.MinHeight = 15;
                     blob.MinWidth = blob.MinHeight;
                     blob.MaxHeight = blob.MaxWidth = 300;
                     blob.ApplyInPlace(_bitmap);
@@ -143,11 +143,10 @@ namespace WindowsFormsKinectTest
                     blobCounter.ProcessImage(_bitmap);
                     Blob[] blobs = blobCounter.GetObjectsInformation();
                     // create Graphics object to draw on the image and a pen
-                    _bitmap = AForge.Imaging.Image.Clone(_bitmap, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                    Graphics g = Graphics.FromImage(_bitmap);
+                    
                     Pen redPen = new Pen(Color.Red, 2);
                     Pen greenPen = new Pen(Color.Green, 2);
-                    Pen purplePen = new Pen(Color.Purple, 5);
+                    Pen purplePen = new Pen(Color.OrangeRed, 3);
                     Pen pen;
                     // check each object and draw circle around objects, which
                     // are recognized as circles
@@ -157,7 +156,7 @@ namespace WindowsFormsKinectTest
                     {
                         float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width;
 
-                        if (hw_ratio > 0.75 && hw_ratio < 1.5 && blobs[i].Fullness > 0.35)
+                        if (hw_ratio > 0.65 && hw_ratio < 1.5 && blobs[i].Fullness > 0.35)
                         {
                             if (blobs[i].Area > maxFullness)
                             {
@@ -167,19 +166,31 @@ namespace WindowsFormsKinectTest
                         }
                     }
 
+
+                    //draw to screen!
+                    Grayscale gray2 = new Grayscale(0.2125, 0.7154, 0.072);
+                    _drawBitmap = gray2.Apply(_drawBitmap);
+                    _drawBitmap = AForge.Imaging.Image.Clone(_drawBitmap, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    Graphics g = Graphics.FromImage(_drawBitmap);
+
+                    AForge.Point ballPos = new AForge.Point(-1, -1);
+                    if (maxBlob >= 0)
+                        ballPos = blobs[maxBlob].CenterOfGravity;
+                    game.DrawGridAndScore(g, ballPos);
+                    
                     for (int i = 0, n = blobs.Length; i < n; i++)
                     {
                         float hw_ratio = (float)(blobs[i].Rectangle.Height) / blobs[i].Rectangle.Width;
 
-                        if (hw_ratio > 0.75 && hw_ratio < 1.5 && blobs[i].Area > 300 && blobs[i].Fullness > 0.35)
+                        if (hw_ratio > 0.65 && hw_ratio < 1.5 && blobs[i].Area > 200 && blobs[i].Fullness > 0.35)
                         {
                             AForge.Point center = blobs[i].CenterOfGravity;
                             if (maxBlob == i)
                                 pen = purplePen;
                             else if (blobs[i].Fullness > 0.35)
-                                pen = greenPen;
+                                continue;//pen = greenPen;
                             else
-                                pen = redPen;
+                                continue;// pen = redPen;
 
                             float radius = blobs[i].Rectangle.Width / 2;
                             g.DrawEllipse(pen,
@@ -187,8 +198,8 @@ namespace WindowsFormsKinectTest
                                 (int)(center.Y - radius),
                                 (int)(radius * 2),
                                 (int)(radius * 2));
-                            g.DrawString(hw_ratio.ToString(), new Font("Arial", 16), new SolidBrush(Color.Yellow), 
-                                new System.Drawing.Point((int)center.X, (int)center.Y));
+                            //g.DrawString(hw_ratio.ToString(), new Font("Arial", 16), new SolidBrush(Color.Yellow), 
+                             //   new System.Drawing.Point((int)center.X, (int)center.Y));
                         }
                     }
 
