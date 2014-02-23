@@ -13,7 +13,7 @@ public class BoardQueryThread
     {
         while (true)
         {
-            Thread.Sleep(50);
+            Thread.Sleep(100);
             MyWebRequest request = new MyWebRequest("http://107.170.71.135:8000/board/");
             string json_response = request.GetResponse();
             JObject json = JObject.Parse(json_response);
