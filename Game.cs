@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 
 public class Game
 {
@@ -23,6 +24,10 @@ public class Game
                                     new Rectangle(280, 50, 80, 61), new Rectangle(360, 50, 80, 61), new Rectangle(440, 50, 80, 61),
                                     new Rectangle(520, 50, 80, 61)}
         };
+
+        BoardQueryThread qb = new BoardQueryThread(_board);
+        Thread oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
+        oThread.Start();
 	}
 
    /* |50
