@@ -211,7 +211,7 @@ namespace WindowsFormsKinectTest
                     if (game.hasWon)
                         label1.Text = "Player 1 WON!!!";
 
-                    //this.Refresh();
+                    this.Refresh();
                 }
 
             }

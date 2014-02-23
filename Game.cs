@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using System.Threading;
 
 public class Game
 {
@@ -51,6 +52,10 @@ public class Game
             new Rectangle(20, 130, 600, 160),  //first drop row
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
+
+        BoardQueryThread qb = new BoardQueryThread(_board);
+        Thread oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
+        oThread.Start();
 	}
 
     Pen arrowPen = new Pen(Color.Purple, 10);
