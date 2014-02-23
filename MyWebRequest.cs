@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.IO;
+using System.Text;
 
 public class MyWebRequest
 {
