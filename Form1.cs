@@ -10,12 +10,13 @@ using AForge;
 using AForge.Imaging.Filters;
 using AForge.Imaging;
 using AForge.Math.Geometry;
+using System.Threading;
 
 namespace WindowsFormsKinectTest
 {
     public partial class Form1 : Form
     {
-        private KinectSensorChooser _chooser;
+        private KinectSensorChooser _chooser = null;
         private Bitmap _bitmap;
         private Bitmap _drawBitmap;
         private Bitmap _depthBitmap;
@@ -29,9 +30,6 @@ namespace WindowsFormsKinectTest
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _chooser = new KinectSensorChooser();
-            _chooser.KinectChanged += ChooserSensorChanged;
-            _chooser.Start();
         }
 
         void ChooserSensorChanged(object sender, KinectChangedEventArgs e)
@@ -77,14 +75,17 @@ namespace WindowsFormsKinectTest
 
         void SensorAllFramesReady(object sender, AllFramesReadyEventArgs e)
         {
-            SensorFrameReady(e);
-            video.Image = _drawBitmap;
+            if (game.hasWon == false)
+            {
+                SensorFrameReady(e);
+                video.Image = _drawBitmap;
+                Application.DoEvents();
+            }
         }
 
 
         void SensorFrameReady(AllFramesReadyEventArgs e)
         {
-
             // if the window is displayed, show the depth buffer image
             Bitmap mask = null;
             using (DepthImageFrame frame = e.OpenDepthImageFrame())
@@ -110,7 +111,6 @@ namespace WindowsFormsKinectTest
                     Invert invert = new Invert();
                     invert.ApplyInPlace(mask);
                 }
-
             }
 
             using (ColorImageFrame frame = e.OpenColorImageFrame())
@@ -208,7 +208,10 @@ namespace WindowsFormsKinectTest
                     purplePen.Dispose();
                     g.Dispose();
 
-                    this.Refresh();
+                    if (game.hasWon)
+                        label1.Text = "Player 1 WON!!!";
+
+                    //this.Refresh();
                 }
 
             }
@@ -254,6 +257,17 @@ namespace WindowsFormsKinectTest
             bmap.UnlockBits(bmapdata);
 
             return bmap;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (_chooser == null)
+            {
+                _chooser = new KinectSensorChooser();
+                _chooser.KinectChanged += ChooserSensorChanged;
+                _chooser.Start();
+            }
+            game = new Game();
         }
     }
 }
