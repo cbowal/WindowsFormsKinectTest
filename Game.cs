@@ -137,7 +137,7 @@ public class Game
         for (int x = 0; x < 6 - 3; x++)
             for (int y = 0; y < 7 - 3; y++)
             {
-                int sum = sum4(x + 3, y + 3, x + 2, y + 2, x + 1, y + 1, x, y) / 4;
+                int sum = sum4(x, y + 3, x + 1, y + 2, x + 2, y + 1, x + 3, y) / 4;
                 if (sum != 0)
                     someoneWon(sum, x + 3, y + 3, x + 2, y + 2, x + 1, y + 1, x, y);
             }
