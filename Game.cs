@@ -7,6 +7,7 @@ using System.Threading;
 public class Game
 {
     private int[,] _board;
+    private Object _lock = new Object();
     private Rectangle[,]_dims;
     private Rectangle[] _rows;
     private int previousDropRow = -1;
@@ -16,7 +17,10 @@ public class Game
 
 	public Game()
 	{
-        _board = new int[6, 7] {
+
+        lock (_lock)
+        {
+            _board = new int[6, 7] {
                                 {0,0,0,0,0,0,0},
                                 {0,0,0,0,0,0,0},
                                 {0,0,0,0,0,0,0},
@@ -24,6 +28,8 @@ public class Game
                                 {0,0,0,0,0,0,0},
                                 {0,0,0,0,0,0,0},
                                             };
+        }
+       
 
         _dims = new Rectangle[6, 7] {
                                 {new Rectangle(40, 50, 80, 61), new Rectangle(120, 50, 80, 61), new Rectangle(200, 50, 80, 61),
@@ -53,7 +59,7 @@ public class Game
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
 
-        BoardQueryThread qb = new BoardQueryThread(_board);
+        BoardQueryThread qb = new BoardQueryThread(_board, _lock);
         Thread oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
         oThread.Start();
 	}
@@ -119,34 +125,38 @@ public class Game
     public void DrawGridAndScore(Graphics g, AForge.Point p)
     {
         //draw the grid 
-        for (int x = 0; x < 6; x++)
-            for (int y = 0; y < 7; y++)
-            {
-                if (_board[x, y] == 1)
+        lock (_lock)
+        {
+            for (int x = 0; x < 6; x++)
+                for (int y = 0; y < 7; y++)
                 {
-                    g.FillRectangle(p1Brush, _dims[x, y]);
-                }
-                else if (_board[x, y] == -1)
-                {
-                    g.FillRectangle(p2Brush, _dims[x, y]);
-                }
-                else if (x == 0 && _dims[x, y].Contains((int)p.X, (int)p.Y))
-                {
-                    arrowPen.StartCap = LineCap.Round;
-                    arrowPen.EndCap = LineCap.ArrowAnchor;
-                    g.DrawLine(arrowPen, _dims[x, y].X + 40, _dims[x, y].Y - 35, _dims[x, y].X + 40, _dims[x, y].Y - 5);
-                    activatedColumn = y;
+                    if (_board[x, y] == 1)
+                    {
+                        g.FillRectangle(p1Brush, _dims[x, y]);
+                    }
+                    else if (_board[x, y] == -1)
+                    {
+                        g.FillRectangle(p2Brush, _dims[x, y]);
+                    }
+                    else if (x == 0 && _dims[x, y].Contains((int)p.X, (int)p.Y))
+                    {
+                        arrowPen.StartCap = LineCap.Round;
+                        arrowPen.EndCap = LineCap.ArrowAnchor;
+                        g.DrawLine(arrowPen, _dims[x, y].X + 40, _dims[x, y].Y - 35, _dims[x, y].X + 40, _dims[x, y].Y - 5);
+                        activatedColumn = y;
 
-                    g.FillRectangle(grayBrush, _dims[x, y]);
-                }
-                else
-                {
-                    g.DrawRectangle(borderPen, _dims[x, y]);
-                }
+                        g.FillRectangle(grayBrush, _dims[x, y]);
+                    }
+                    else
+                    {
+                        g.DrawRectangle(borderPen, _dims[x, y]);
+                    }
 
-                if (_dims[x, y].Contains((int)p.X, (int)p.Y) && hasWon == false)
-                    _board[x, y] = 1;
-            }
+                    if (_dims[x, y].Contains((int)p.X, (int)p.Y) && hasWon == false)
+                        _board[x, y] = 1;
+                }
+        }
+        
 
         if (hasWon)
             return;
