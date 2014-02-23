@@ -3,32 +3,35 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Threading;
+using System.Net;
+using Newtonsoft.Json.Linq;
 
 public class Game 
 {
     private int[,] _board;
-    private Object _lock = new Object();
     private Rectangle[,]_dims;
     private Rectangle[] _rows;
     private int previousDropRow = -1;
     private int activatedColumn = -1;
-    private BoardQueryThread qb;
-    private Thread oThread;
     public bool hasWon = false;
+    private Object _lock = new Object();
+    private int player = 0;
+    public int winningPlayer = 0;
 
-    public void reset()
+    public void reset(int tPlayer)
     {
+        player = tPlayer;
 
         lock (_lock)
         {
             _board = new int[6, 7] {
-                                {0,0,0,0,0,0,0},
-                                {0,0,0,0,0,0,0},
-                                {0,0,0,0,0,0,0},
-                                {0,0,0,0,0,0,0},
-                                {0,0,0,0,0,0,0},
-                                {0,0,0,0,0,0,0},
-                                            };
+                            {0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0},
+                                        };
         }
         previousDropRow = -1;
         activatedColumn = -1;
@@ -62,15 +65,16 @@ public class Game
             new Rectangle(20, 130, 600, 160),  //first drop row
             new Rectangle(0, 290, 640, 190),  //second drop row
         };
+
+
+        WebClient wc = new WebClient();
+        wc.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
+        wc.DownloadStringAsync(new Uri("http://107.170.71.135:8000/reset/"));
     }
 
 	public Game()
 	{
-        reset();
-
-        qb = new BoardQueryThread(ref _board, ref _lock);
-        oThread = new Thread(new ThreadStart(qb.QueryBoardRun));
-        oThread.Start();
+        reset(1);
 	}
 
     Pen arrowPen = new Pen(Color.Purple, 10);
@@ -82,13 +86,21 @@ public class Game
 
     private int sum4(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4)
     {
-        return _board[x1, y1] + _board[x2, y2] + _board[x3, y3] + _board[x4, y4];
+        lock (_lock)
+        {
+            return _board[x1, y1] + _board[x2, y2] + _board[x3, y3] + _board[x4, y4];
+        }
     }
 
-    private void someoneWon(int player)
+    private void someoneWon(int playerNum)
     {
         hasWon = true;
-        System.Console.WriteLine("PLAYER WON!!!!" + player.ToString());
+        winningPlayer = playerNum;
+
+        if (player == playerNum)
+            System.Console.WriteLine("YOU WON!!! Congrats :)");
+        else
+            System.Console.WriteLine("YOU LOST... :(");
     }
 
     private void didSomeoneWin()
@@ -160,9 +172,6 @@ public class Game
                     {
                         g.DrawRectangle(borderPen, _dims[x, y]);
                     }
-
-                    if (_dims[x, y].Contains((int)p.X, (int)p.Y) && hasWon == false)
-                        _board[x, y] = 1;
                 }
         }
         
@@ -201,7 +210,8 @@ public class Game
                         //woot - they dropped it!!!
                         
                         System.Console.WriteLine("DROPPED!!!");
-                        //todo: call web api
+                        //call web api
+                        dropPiece(activatedColumn, player);
 
                         previousDropRow = -1;
                         activatedColumn = -1;
@@ -212,6 +222,38 @@ public class Game
                 break;
         }
 
+        updateBoard();
+
         didSomeoneWin();
+    }
+
+    private void dropPiece(int col, int player)
+    {
+        WebClient wc = new WebClient();
+        wc.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
+        wc.DownloadStringAsync(new Uri("http://107.170.71.135:8000/move/" + col.ToString() + "/" + player.ToString() + "/"));
+    }
+
+
+    private void updateBoard()
+    {
+        WebClient wc = new WebClient();
+        wc.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
+        wc.DownloadStringAsync(new Uri("http://107.170.71.135:8000/board/"));
+    }
+
+    private void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+    {
+        JObject json = JObject.Parse(e.Result);
+        lock (_lock)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    _board[i, j] = (int)json["board"][i][j];
+                }
+            }
+        }
     }
 }

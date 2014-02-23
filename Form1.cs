@@ -21,6 +21,8 @@ namespace WindowsFormsKinectTest
         private Bitmap _drawBitmap;
         private Bitmap _depthBitmap;
 
+        private int player = 0;
+
         private Game game;
         
         public Form1()
@@ -52,11 +54,10 @@ namespace WindowsFormsKinectTest
             try
             {
                 newsensor.Start();
-                rtbMessages.Text = "Kinect Started" + "\r";
             }
             catch (System.IO.IOException)
             {
-                rtbMessages.Text = "Kinect Not Started" + "\r";
+                MessageBox.Show("Kinect Not Started");
                 //maybe another app is using Kinect
                 _chooser.TryResolveConflict();
             }
@@ -80,7 +81,7 @@ namespace WindowsFormsKinectTest
             {
                 SensorFrameReady(e);
                 video.Image = _drawBitmap;
-                Application.DoEvents();
+                //Application.DoEvents();
             }
         }
 
@@ -210,7 +211,10 @@ namespace WindowsFormsKinectTest
                     g.Dispose();
 
                     if (game.hasWon)
-                        label1.Text = "Player 1 WON!!!";
+                        if (player == game.winningPlayer)
+                            label1.Text = "You Won!!! Congrats :)";
+                        else
+                            label1.Text = "You Lost... :(";
 
                     this.Refresh();
                 }
@@ -268,7 +272,15 @@ namespace WindowsFormsKinectTest
                 _chooser.KinectChanged += ChooserSensorChanged;
                 _chooser.Start();
             }
-            game.reset();
+
+            if (comboBox1.SelectedItem.ToString().Contains("1"))
+                player = 1;
+            else
+                player = -1;
+
+            game.reset(player);
+
+            label1.Text = "";
             //todo: reset everything!
         }
     }
