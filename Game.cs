@@ -244,16 +244,24 @@ public class Game
 
     private void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
     {
-        JObject json = JObject.Parse(e.Result);
-        lock (_lock)
+        try
         {
-            for (int i = 0; i < 6; i++)
+            JObject json = JObject.Parse(e.Result);
+            lock (_lock)
             {
-                for (int j = 0; j < 7; j++)
+                for (int i = 0; i < 6; i++)
                 {
-                    _board[i, j] = (int)json["board"][i][j];
+                    for (int j = 0; j < 7; j++)
+                    {
+                        _board[i, j] = (int)json["board"][i][j];
+                    }
                 }
             }
         }
+        catch
+        {
+            return;
+        }
+        
     }
 }
